@@ -5,14 +5,13 @@
 
 using namespace std;
 
-vector<Token> tokens;
-
 struct Token {
     string type;
     string value;
     int line;
 };
 
+vector<Token> tokens;
 vector<Token> error;
 
 char peek_char(int pos, const vector<char>& v) {
@@ -39,7 +38,7 @@ void get_token(const vector<char>& v, int& i, int& lin) {
         }
         if (v[i] == '>') {
             if (peek_char(i, v) == '=') { get_char(i); tmp = { "mayeq", ">=", lin }; tokens.push_back(tmp);}
-            if (peek_char(i, v) == '>') {
+            else if (peek_char(i, v) == '>') {
                 get_char(i);
                 while (i < (int)v.size() && v[i] != '<' && peek_char(i, v) != '<' && peek_char(i, v) != '\0') {
                     get_char(i);
@@ -51,86 +50,83 @@ void get_token(const vector<char>& v, int& i, int& lin) {
                 }
                 break;
             }
-            tmp = { "mayor", ">", lin };
-            tokens.push_back(tmp);
+            else {
+                tmp = { "mayor", ">", lin };
+                tokens.push_back(tmp);
+            }
         }
-        if (v[i] == '$') {
-            if (peek_char(i, v) == 'n') { get_char(i); tmp = { "entero", "$n", lin }; tokens.push_back(tmp);break;}
-            if (peek_char(i, v) == 's') { get_char(i); tmp = { "string", "$s", lin }; tokens.push_back(tmp);break;}
-            if (peek_char(i, v) == 'b') { get_char(i); tmp = { "boolean", "$b", lin }; tokens.push_back(tmp);break;}
+        else if (v[i] == '$') {
+            if (peek_char(i, v) == 'n') { get_char(i); tmp = { "entero", "$n", lin }; tokens.push_back(tmp); break;}
+            if (peek_char(i, v) == 's') { get_char(i); tmp = { "string", "$s", lin }; tokens.push_back(tmp); break;}
+            if (peek_char(i, v) == 'b') { get_char(i); tmp = { "boolean", "$b", lin }; tokens.push_back(tmp); break;}
             get_char(i);
-            tmp = {"", "error type not accepted", lin};
+            tmp = {"error", "error type not accepted", lin};
             error.push_back(tmp);
         }
-
-        if (v[i] == 'w' && peek_char(i, v) == 'h' && peek_char(i + 1, v) == 'e' && peek_char(i + 2, v) == 'n') {
+        else if (v[i] == 'w' && peek_char(i, v) == 'h' && peek_char(i + 1, v) == 'e' && peek_char(i + 2, v) == 'n') {
             string lex = "when"; get_char(i); get_char(i); get_char(i);
             tmp = { "when", lex, lin };
             tokens.push_back(tmp);
         }
-        if (v[i] == 'b' && peek_char(i, v) == 'u' && peek_char(i + 1, v) == 't') {
+        else if (v[i] == 'b' && peek_char(i, v) == 'u' && peek_char(i + 1, v) == 't') {
             string lex = "but"; get_char(i); get_char(i);
             tmp = { "but", lex, lin };
             tokens.push_back(tmp);
         }
-        if (v[i] == 'd' && peek_char(i, v) == 'e' && peek_char(i + 1, v) == 'f' && peek_char(i + 2, v) == 'i' && peek_char(i + 3, v) == 'n' && peek_char(i + 4, v) == 'e') {
+        else if (v[i] == 'd' && peek_char(i, v) == 'e' && peek_char(i + 1, v) == 'f' && peek_char(i + 2, v) == 'i' && peek_char(i + 3, v) == 'n' && peek_char(i + 4, v) == 'e') {
             string lex = "define"; get_char(i); get_char(i); get_char(i); get_char(i); get_char(i);
             tmp = { "define", lex, lin };
             tokens.push_back(tmp);
         }
-        if (v[i] == 't' && peek_char(i, v) == 'r' && peek_char(i + 1, v) == 'u' && peek_char(i + 2, v) == 'e') {
+        else if (v[i] == 't' && peek_char(i, v) == 'r' && peek_char(i + 1, v) == 'u' && peek_char(i + 2, v) == 'e') {
             string lex = "true"; get_char(i); get_char(i); get_char(i);
             tmp = { "true", lex, lin };
             tokens.push_back(tmp);
         }
-        if (v[i] == 'f' && peek_char(i, v) == 'a' && peek_char(i + 1, v) == 'l' && peek_char(i + 2, v) == 's' && peek_char(i + 3, v) == 'e') {
+        else if (v[i] == 'f' && peek_char(i, v) == 'a' && peek_char(i + 1, v) == 'l' && peek_char(i + 2, v) == 's' && peek_char(i + 3, v) == 'e') {
             string lex = "false"; get_char(i); get_char(i); get_char(i); get_char(i);
             tmp = { "false", lex, lin };
             tokens.push_back(tmp);
         }
-
-        if (v[i] == '"') {
-            string str; int tmp = i + 1, tmp1 = lin;
-            while (peek_char(i, v) != '"' && i < v.size()) {
+        else if (v[i] == '"') {
+            string str; int tmpi = i + 1, tmp1 = lin;
+            while (peek_char(i, v) != '"' && i < (int)v.size()) {
                 get_char(i);
                 if (v[i] == '\n') lin++;
                 else str.push_back(v[i]);
             }
             get_char(i);
             if (i == (int)v.size()) {
-                i = tmp; lin = tmp1; error.push_back(lin);
+                i = tmpi; lin = tmp1;
+                error.push_back({ "error", "unclosed string", lin });
+            } else {
+                tmp = { "string_val", str, lin };
+                tokens.push_back(tmp);
             }
-            tmp = { "string_val", str, lin };
-            tokens.push_back(tmp);
         }
-
-        if (v[i] == '=') {
+        else if (v[i] == '=') {
             if (peek_char(i, v) == '=') { get_char(i); tmp = { "asign", "==", lin };  tokens.push_back(tmp);}
-            tmp = { "eq", "=", lin };
-            tokens.push_back(tmp);
+            else { tmp = { "eq", "=", lin }; tokens.push_back(tmp);}
         }
-        if (v[i] == '+') { tmp = { "sum", "+", lin }; tokens.push_back(tmp);}
-        if (v[i] == '-') { tmp = { "res", "-", lin }; tokens.push_back(tmp);}
-        if (v[i] == '/') { tmp = { "div", "/", lin }; tokens.push_back(tmp);}
-        if (v[i] == '*') { tmp = { "mul", "*", lin }; tokens.push_back(tmp);}
-        if (v[i] == '<') {
+        else if (v[i] == '+') { tmp = { "sum", "+", lin }; tokens.push_back(tmp);}
+        else if (v[i] == '-') { tmp = { "res", "-", lin }; tokens.push_back(tmp);}
+        else if (v[i] == '/') { tmp = { "div", "/", lin }; tokens.push_back(tmp);}
+        else if (v[i] == '*') { tmp = { "mul", "*", lin }; tokens.push_back(tmp);}
+        else if (v[i] == '<') {
             if (peek_char(i, v) == '=') { get_char(i); tmp = { "meneq", "<=", lin }; tokens.push_back(tmp);}
-            tmp = { "menor", "<", lin };
-            tokens.push_back(tmp);
+            else { tmp = { "menor", "<", lin }; tokens.push_back(tmp);}
         }
-        if (v[i] == '!') {
+        else if (v[i] == '!') {
             if (peek_char(i, v) == '=') { get_char(i); tmp = { "neq", "!=", lin }; tokens.push_back(tmp);}
-            error.push_back(lin); tmp = { "error", "!", lin };
+            else { error.push_back({ "error", "!", lin }); }
         }
-
-        if (v[i] == ',') { tmp = { "coma", ",", lin }; tokens.push_back(tmp);}
-        if (v[i] == ';') { tmp = { "end", ";", lin }; tokens.push_back(tmp);}
-        if (v[i] == '(') { tmp = { "lpar", "(", lin }; tokens.push_back(tmp);}
-        if (v[i] == ')') { tmp = { "rpar", ")", lin }; tokens.push_back(tmp);}
-        if (v[i] == '{') { tmp = { "lbra", "{", lin }; tokens.push_back(tmp);}
-        if (v[i] == '}') { tmp = { "rbra", "}", lin }; tokens.push_back(tmp);}
-
-        if (v[i] >= '0' && v[i] <= '9') {
+        else if (v[i] == ',') { tmp = { "coma", ",", lin }; tokens.push_back(tmp);}
+        else if (v[i] == ';') { tmp = { "end", ";", lin }; tokens.push_back(tmp);}
+        else if (v[i] == '(') { tmp = { "lpar", "(", lin }; tokens.push_back(tmp);}
+        else if (v[i] == ')') { tmp = { "rpar", ")", lin }; tokens.push_back(tmp);}
+        else if (v[i] == '{') { tmp = { "lbra", "{", lin }; tokens.push_back(tmp);}
+        else if (v[i] == '}') { tmp = { "rbra", "}", lin }; tokens.push_back(tmp);}
+        else if (v[i] >= '0' && v[i] <= '9') {
             string num; num.push_back(v[i]);
             while (peek_char(i, v) >= '0' && peek_char(i, v) <= '9') {
                 get_char(i);
@@ -139,8 +135,7 @@ void get_token(const vector<char>& v, int& i, int& lin) {
             tmp = { "num_val", num, lin };
             tokens.push_back(tmp);
         }
-
-        if ((v[i] >= 'a' && v[i] <= 'z') || (v[i] >= 'A' && v[i] <= 'Z')) {
+        else if ((v[i] >= 'a' && v[i] <= 'z') || (v[i] >= 'A' && v[i] <= 'Z')) {
             string id; id.push_back(v[i]);
             while ((peek_char(i, v) >= '0' && peek_char(i, v) <= '9') ||
                 (peek_char(i, v) >= 'a' && peek_char(i, v) <= 'z') ||
@@ -152,15 +147,15 @@ void get_token(const vector<char>& v, int& i, int& lin) {
             tmp = { "id", id, lin };
             tokens.push_back(tmp);
         }
-
-        error.push_back(lin);
-        return { "error", string(1, v[i]), lin };
+        else {
+            error.push_back({ "error", string(1, v[i]), lin });
+        }
+        break; // salir del while después de procesar un token
     }
 }
 
 int main() {
     ifstream archivo("code.txt");
-
     vector<char> buffer;
     char c;
     while (archivo.get(c)) buffer.push_back(c);
@@ -177,8 +172,8 @@ int main() {
         }
     }
 
-    for (int i : error) {
-        cout << "Error in line: " << i << endl;
+    for (auto& e : error) {
+        cout << "Error in line " << e.line << " with value: " << e.value << endl;
     }
 
     return 0;
